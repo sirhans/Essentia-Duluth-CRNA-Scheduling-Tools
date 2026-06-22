@@ -2,6 +2,10 @@
 
 Desktop scheduling utility for internal CRNA schedule adjustment workflows.
 
+## Downloads
+
+Download the latest macOS and Windows installers at [crna.sirhans.org](https://crna.sirhans.org).
+
 ## License
 
 Copyright (c) 2026 Hans Anderson. All rights reserved.
