@@ -1,6 +1,6 @@
 {
   "name": "symplr-schedule",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Desktop tool to extract scheduling data from symplr Workforce",
   "author": "Hans",
   "main": "main.js",
