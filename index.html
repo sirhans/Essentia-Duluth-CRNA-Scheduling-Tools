@@ -56,6 +56,39 @@
         align-items: center;
         gap: 14px;
       }
+      .has-tooltip {
+        position: relative;
+      }
+      .has-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 1000;
+        width: max-content;
+        max-width: 420px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #020617;
+        color: var(--text);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.35;
+        white-space: normal;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-2px);
+        transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+      }
+      .has-tooltip:hover::after,
+      .has-tooltip:focus-within::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
       /* When a preference row is inactive, dim only the text labels — the
          dropdowns stay fully styled because they remain clickable. */
       .pref-row.disabled .pref-label,
@@ -315,7 +348,10 @@
           </span>
         </div>
 
-        <div class="pref-row">
+        <div
+          class="pref-row has-tooltip"
+          data-tooltip="This is the preferred way of reducing working hours. When the first preference reduction is not feasible, the app will try second preference instead."
+        >
           <span class="pref-label">First preference</span>
           <span class="pref-sentence">
             Reduce
@@ -332,7 +368,11 @@
           </span>
         </div>
 
-        <div class="pref-row" id="second-pref-row">
+        <div
+          class="pref-row has-tooltip"
+          id="second-pref-row"
+          data-tooltip="This is a second method of reducing working hours, to be used when the first preference method is not feasible."
+        >
           <span class="pref-label">Second preference</span>
           <span class="pref-sentence">
             Reduce
@@ -351,7 +391,10 @@
           </span>
         </div>
 
-        <div class="pref-row">
+        <div
+          class="pref-row has-tooltip"
+          data-tooltip="Set the probability of reducing hours on Mondays and Fridays. (0 means don't reduce on these days.)"
+        >
           <span class="pref-label">Mon/Fri chance</span>
           <span class="pref-sentence">
             <select id="monfri-chance" class="pref-select">
@@ -371,7 +414,10 @@
           </span>
         </div>
 
-        <div class="pref-row">
+        <div
+          class="pref-row has-tooltip"
+          data-tooltip="A mid-cluster day is a day where both tomorrow and yesterday are working days. Setting this to 0 means we never set mid-cluster days to 0 hours. This has no effect on reductions that don't go all the way to 0 hours. If in a given week we can not achieve the required reduction with this setting on, then we ignore this setting."
+        >
           <span class="pref-label">Mid-cluster chance</span>
           <span class="pref-sentence">
             <select id="cluster-chance" class="pref-select">
@@ -393,8 +439,14 @@
       </div>
 
       <div class="checkboxes">
-        <label class="pref-weekend">
-          <input type="checkbox" id="preserve-weekends" />
+        <label
+          class="pref-weekend has-tooltip"
+          data-tooltip="Don't reduce working hours on Saturday and Sunday"
+        >
+          <input
+            type="checkbox"
+            id="preserve-weekends"
+          />
           preserve weekends
         </label>
       </div>
