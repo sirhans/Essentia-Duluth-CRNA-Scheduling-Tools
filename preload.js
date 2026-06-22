@@ -11,4 +11,8 @@ contextBridge.exposeInMainWorld('app', {
   // Returns { canceled } or { canceled: false, filePath }.
   exportXlsx: (bytes, defaultName) =>
     ipcRenderer.invoke('export-xlsx', { bytes, defaultName }),
+  updates: {
+    check: () => ipcRenderer.invoke('updates:check'),
+    install: () => ipcRenderer.invoke('updates:install'),
+  },
 });

@@ -38,6 +38,11 @@
       }
       header h1 { font-size: 15px; font-weight: 600; margin: 0; }
       header .meta { font-size: 12px; color: var(--muted); }
+      .header-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+      }
       #preferences {
         flex: 0 0 auto;
         padding: 12px 16px;
@@ -214,18 +219,30 @@
         line-height: 1.5;
         margin-bottom: 16px;
       }
-      .modal-actions { display: flex; justify-content: flex-end; }
-      .modal-ok {
-        background: var(--accent);
-        color: var(--header);
-        border: none;
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .modal-button {
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 7px 18px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
       }
-      .modal-ok:hover { filter: brightness(1.08); }
+      .modal-button.primary {
+        background: var(--accent);
+        color: var(--header);
+        border: none;
+      }
+      .modal-button.secondary {
+        background: transparent;
+        color: var(--text);
+      }
+      .modal-button:hover { filter: brightness(1.08); }
+      .modal-button.secondary:hover { border-color: var(--accent); }
       /* Rows that could not reach target after all allowed reductions. */
       tbody tr.short-row td,
       tbody tr.short-row td.rownum {
@@ -326,11 +343,15 @@
         cursor: pointer;
       }
       button.reset:hover { color: var(--text); border-color: var(--accent); }
+      button.reset:disabled { opacity: 0.55; cursor: not-allowed; }
     </style>
   </head>
   <body>
     <header>
       <span class="meta" id="file-meta"></span>
+      <span class="header-actions">
+        <button class="reset" id="check-updates">check for updates</button>
+      </span>
     </header>
 
     <section id="preferences">
@@ -487,7 +508,8 @@
           reduce. Set it to a smaller value (72, 64, 56, or 48) and try again.
         </div>
         <div class="modal-actions">
-          <button class="modal-ok" id="modal-ok">OK</button>
+          <button class="modal-button secondary" id="modal-cancel" hidden>Cancel</button>
+          <button class="modal-button primary" id="modal-ok">OK</button>
         </div>
       </div>
     </div>

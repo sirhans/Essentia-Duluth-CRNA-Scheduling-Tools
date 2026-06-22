@@ -28,12 +28,16 @@ jobs:
             artifact: mac-installer
             files: |
               dist-release/*.dmg
+              dist-release/*.zip
+              dist-release/latest-mac.yml
           - platform: windows
             os: windows-latest
             script: npm run dist:win
             artifact: windows-installer
             files: |
               dist-release/*.exe
+              dist-release/*.blockmap
+              dist-release/latest.yml
 
     steps:
       - name: Check out repository
@@ -113,4 +117,4 @@ jobs:
           gh release create "$TAG" release-assets/**/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "$TAG" \
-            --notes "Download the macOS DMG or Windows installer below."
+            --notes "Download the macOS DMG or Windows installer below. Update metadata is included for in-app updates."

@@ -10,6 +10,7 @@ const errorBox = document.getElementById('error');
 const fileMeta = document.getElementById('file-meta');
 const statusEl = document.getElementById('status');
 const resetBtn = document.getElementById('reset-btn');
+const checkUpdatesBtn = document.getElementById('check-updates');
 const reduceBtn = document.getElementById('reduce-hours');
 const exportBtn = document.getElementById('export-xlsx');
 
@@ -527,21 +528,134 @@ reduceBtn.addEventListener('click', reduceHours);
 // --- Working-hours warning modal -----------------------------------------
 
 const modalBackdrop = document.getElementById('modal-backdrop');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = modalBackdrop.querySelector('.modal-body');
+const modalOkBtn = document.getElementById('modal-ok');
+const modalCancelBtn = document.getElementById('modal-cancel');
+let modalOkHandler = null;
 
-function showWorkingHoursModal() {
+function showModal({ title, body, okText = 'OK', cancelText = '', onOk = null }) {
+  modalTitle.textContent = title;
+  modalBody.textContent = body;
+  modalOkBtn.textContent = okText;
+  modalCancelBtn.textContent = cancelText;
+  modalCancelBtn.hidden = !cancelText;
+  modalOkBtn.disabled = false;
+  modalCancelBtn.disabled = false;
+  modalOkHandler = onOk;
   modalBackdrop.hidden = false;
 }
-function hideWorkingHoursModal() {
-  modalBackdrop.hidden = true;
+
+function showWorkingHoursModal() {
+  showModal({
+    title: 'Lower the working hours',
+    body:
+      "Working hours is set to 80 — that's the starting amount, so there's nothing to " +
+      'reduce. Set it to a smaller value (72, 64, 56, or 48) and try again.',
+    okText: 'OK',
+  });
 }
 
-document.getElementById('modal-ok').addEventListener('click', hideWorkingHoursModal);
+function hideModal() {
+  modalBackdrop.hidden = true;
+  modalOkHandler = null;
+}
+
+modalOkBtn.addEventListener('click', () => {
+  const handler = modalOkHandler;
+  if (!handler) {
+    hideModal();
+    return;
+  }
+  handler();
+});
+modalCancelBtn.addEventListener('click', hideModal);
 modalBackdrop.addEventListener('click', (e) => {
-  if (e.target === modalBackdrop) hideWorkingHoursModal(); // click outside the dialog
+  if (e.target === modalBackdrop) hideModal(); // click outside the dialog
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !modalBackdrop.hidden) hideWorkingHoursModal();
+  if (e.key === 'Escape' && !modalBackdrop.hidden) hideModal();
 });
+
+async function installUpdate(currentVersion, latestVersion) {
+  if (!(window.app && window.app.updates && window.app.updates.install)) {
+    showModal({
+      title: 'Update unavailable',
+      body: 'Updates are only available in the desktop app.',
+      okText: 'OK',
+    });
+    return;
+  }
+  modalOkBtn.disabled = true;
+  modalCancelBtn.disabled = true;
+  modalBody.textContent = `Downloading version ${latestVersion}. The app will restart when the update is ready.`;
+  statusEl.textContent = `Downloading update ${latestVersion}…`;
+  try {
+    const result = await window.app.updates.install();
+    if (result && result.started === false) {
+      showModal({
+        title: 'Up to date',
+        body: 'You are running the latest version.',
+        okText: 'OK',
+      });
+      statusEl.textContent = 'Current version is up to date';
+    }
+  } catch (err) {
+    showModal({
+      title: 'Update failed',
+      body: `Could not update from version ${currentVersion} to ${latestVersion}: ${
+        err && err.message ? err.message : err
+      }`,
+      okText: 'OK',
+    });
+    statusEl.textContent = 'Update failed';
+  }
+}
+
+async function checkForUpdates() {
+  if (!(window.app && window.app.updates && window.app.updates.check)) {
+    showModal({
+      title: 'Update unavailable',
+      body: 'Updates are only available in the desktop app.',
+      okText: 'OK',
+    });
+    return;
+  }
+
+  const originalText = checkUpdatesBtn.textContent;
+  checkUpdatesBtn.disabled = true;
+  checkUpdatesBtn.textContent = 'checking…';
+  statusEl.textContent = 'Checking for updates…';
+  try {
+    const result = await window.app.updates.check();
+    statusEl.textContent = `Current version ${result.currentVersion}`;
+    if (!result.updateAvailable) {
+      showModal({
+        title: 'Up to date',
+        body: 'You are running the latest version.',
+        okText: 'OK',
+      });
+      return;
+    }
+    showModal({
+      title: 'Update available',
+      body: `You are running version ${result.currentVersion}. The latest version is ${result.latestVersion}. Do you want to update?`,
+      okText: 'Update',
+      cancelText: 'Cancel',
+      onOk: () => installUpdate(result.currentVersion, result.latestVersion),
+    });
+  } catch (err) {
+    showModal({
+      title: 'Update check failed',
+      body: `Could not check for updates: ${err && err.message ? err.message : err}`,
+      okText: 'OK',
+    });
+    statusEl.textContent = 'Update check failed';
+  } finally {
+    checkUpdatesBtn.disabled = false;
+    checkUpdatesBtn.textContent = originalText;
+  }
+}
 
 // Second preference is active only when neither of its boxes is "none".
 function secondPreferenceActive() {
@@ -642,6 +756,7 @@ fileInput.addEventListener('change', () => {
 });
 
 resetBtn.addEventListener('click', resetView);
+checkUpdatesBtn.addEventListener('click', checkForUpdates);
 
 // --- Initial state -------------------------------------------------------
 
