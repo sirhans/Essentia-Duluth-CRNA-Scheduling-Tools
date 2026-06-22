@@ -612,8 +612,19 @@ async function installUpdate(currentVersion, latestVersion) {
   }
 }
 
-async function checkForUpdates() {
+function showUpdateAvailableModal(result) {
+  showModal({
+    title: 'Update available',
+    body: `You are running version ${result.currentVersion}. The latest version is ${result.latestVersion}. Do you want to update?`,
+    okText: 'Update',
+    cancelText: 'Cancel',
+    onOk: () => installUpdate(result.currentVersion, result.latestVersion),
+  });
+}
+
+async function checkForUpdates({ manual = false } = {}) {
   if (!(window.app && window.app.updates && window.app.updates.check)) {
+    if (!manual) return;
     showModal({
       title: 'Update unavailable',
       body: 'Updates are only available in the desktop app.',
@@ -623,13 +634,16 @@ async function checkForUpdates() {
   }
 
   const originalText = checkUpdatesBtn.textContent;
-  checkUpdatesBtn.disabled = true;
-  checkUpdatesBtn.textContent = 'checking…';
-  statusEl.textContent = 'Checking for updates…';
+  if (manual) {
+    checkUpdatesBtn.disabled = true;
+    checkUpdatesBtn.textContent = 'checking…';
+    statusEl.textContent = 'Checking for updates…';
+  }
   try {
     const result = await window.app.updates.check();
-    statusEl.textContent = `Current version ${result.currentVersion}`;
+    if (manual) statusEl.textContent = `Current version ${result.currentVersion}`;
     if (!result.updateAvailable) {
+      if (!manual) return;
       showModal({
         title: 'Up to date',
         body: 'You are running the latest version.',
@@ -637,14 +651,9 @@ async function checkForUpdates() {
       });
       return;
     }
-    showModal({
-      title: 'Update available',
-      body: `You are running version ${result.currentVersion}. The latest version is ${result.latestVersion}. Do you want to update?`,
-      okText: 'Update',
-      cancelText: 'Cancel',
-      onOk: () => installUpdate(result.currentVersion, result.latestVersion),
-    });
+    showUpdateAvailableModal(result);
   } catch (err) {
+    if (!manual) return;
     showModal({
       title: 'Update check failed',
       body: `Could not check for updates: ${err && err.message ? err.message : err}`,
@@ -652,8 +661,10 @@ async function checkForUpdates() {
     });
     statusEl.textContent = 'Update check failed';
   } finally {
-    checkUpdatesBtn.disabled = false;
-    checkUpdatesBtn.textContent = originalText;
+    if (manual) {
+      checkUpdatesBtn.disabled = false;
+      checkUpdatesBtn.textContent = originalText;
+    }
   }
 }
 
@@ -756,7 +767,7 @@ fileInput.addEventListener('change', () => {
 });
 
 resetBtn.addEventListener('click', resetView);
-checkUpdatesBtn.addEventListener('click', checkForUpdates);
+checkUpdatesBtn.addEventListener('click', () => checkForUpdates({ manual: true }));
 
 // --- Initial state -------------------------------------------------------
 
@@ -764,3 +775,4 @@ reduceBtn.disabled = true;
 exportBtn.disabled = true;
 fileMeta.textContent = NO_FILE_LABEL;
 updateSecondPrefState();
+checkForUpdates();
