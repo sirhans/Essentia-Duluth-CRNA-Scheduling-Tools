@@ -1,12 +1,13 @@
 {
   "name": "symplr-schedule",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Desktop tool to extract scheduling data from symplr Workforce",
   "author": "Hans",
   "main": "main.js",
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
+    "test": "node --test",
     "dist:mac": "electron-builder --mac --universal --publish never",
     "dist:win": "electron-builder --win --publish never"
   },
