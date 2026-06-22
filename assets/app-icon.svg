@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title>CRNA app icon</title>
+  <rect width="1024" height="1024" fill="#0f172a"/>
+  <g
+    fill="hsl(198, 44%, 73%)"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    font-weight="800"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >
+    <text x="512" y="380" font-size="77" letter-spacing="-2">ESSENTIA DULUTH</text>
+    <text x="512" y="610" font-size="245" letter-spacing="-6">CRNA</text>
+  </g>
+</svg>

@@ -1,0 +1,45 @@
+{
+  "name": "symplr-schedule",
+  "version": "0.1.0",
+  "description": "Desktop tool to extract scheduling data from symplr Workforce",
+  "author": "Hans",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac --universal",
+    "dist:win": "electron-builder --win"
+  },
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.hans.symplrschedule",
+    "productName": "Essentia Duluth CRNA Scheduling Tool",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "renderer.js",
+      "vendor/**"
+    ],
+    "directories": {
+      "output": "dist-release"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity",
+      "identity": null
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

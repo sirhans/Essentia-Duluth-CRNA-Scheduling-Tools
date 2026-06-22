@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Essentia Duluth CRNA Scheduling Tool</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #1e293b;
+        --border: #334155;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --action: hsl(198, 44%, 73%);
+        --accent-bg: rgba(56, 189, 248, 0.12);
+        --header: #0b1220;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex: 0 0 auto;
+      }
+      header h1 { font-size: 15px; font-weight: 600; margin: 0; }
+      header .meta { font-size: 12px; color: var(--muted); }
+      #preferences {
+        flex: 0 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+      }
+      .pref-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .pref-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      /* When a preference row is inactive, dim only the text labels — the
+         dropdowns stay fully styled because they remain clickable. */
+      .pref-row.disabled .pref-label,
+      .pref-row.disabled .pref-sentence {
+        color: rgba(148, 163, 184, 0.4);
+      }
+      .pref-label {
+        flex: 0 0 auto;
+        width: 130px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .pref-sentence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--text);
+      }
+      .pref-select {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .pref-select:focus { outline: none; border-color: var(--accent); }
+      .pref-number {
+        width: 60px;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 13px;
+      }
+      .pref-number:focus { outline: none; border-color: var(--accent); }
+      .pref-suffix { color: var(--muted); font-size: 13px; }
+      .checkboxes {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .pref-weekend {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+      }
+      .pref-weekend input { accent-color: var(--accent); cursor: pointer; }
+      .reduce-btn {
+        flex: 0 0 auto;
+        background: var(--action);
+        color: var(--header);
+        border: none;
+        border-radius: 6px;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .reduce-btn:hover { filter: brightness(1.08); }
+      .reduce-btn:active { filter: brightness(0.95); }
+      .reduce-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+      .actions {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      .export-btn {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 7px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .export-btn:hover { border-color: var(--accent); }
+      .export-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+      td.reduced, th.reduced {
+        color: #f87171;
+        font-weight: 600;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .modal-backdrop[hidden] { display: none; }
+      .modal {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px 22px;
+        max-width: 380px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      }
+      .modal-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .modal-body {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+      .modal-actions { display: flex; justify-content: flex-end; }
+      .modal-ok {
+        background: var(--accent);
+        color: var(--header);
+        border: none;
+        border-radius: 6px;
+        padding: 7px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .modal-ok:hover { filter: brightness(1.08); }
+      /* Rows that could not reach target after all allowed reductions. */
+      tbody tr.short-row td,
+      tbody tr.short-row td.rownum {
+        background: rgba(248, 113, 113, 0.18) !important;
+      }
+
+      #dropzone {
+        flex: 1 1 auto;
+        margin: 16px;
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--muted);
+        text-align: center;
+        transition: border-color 0.15s, background 0.15s;
+        cursor: pointer;
+      }
+      #dropzone.dragover {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+        color: var(--text);
+      }
+      #dropzone .big { font-size: 18px; color: var(--text); }
+      #dropzone .hint { font-size: 13px; }
+      #dropzone.hidden { display: none; }
+      #error {
+        margin: 0 16px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(248, 113, 113, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        color: #fca5a5;
+        font-size: 13px;
+        display: none;
+      }
+      #table-wrap {
+        flex: 1 1 auto;
+        overflow: auto;
+        margin: 8px 16px 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        display: none;
+      }
+      table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        font-size: 13px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        text-align: left;
+        white-space: nowrap;
+        max-width: 360px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background: var(--header);
+        color: var(--action);
+        font-weight: 600;
+        z-index: 3;
+      }
+      td.rownum, th.rownum {
+        position: sticky;
+        left: 0;
+        background: var(--header);
+        color: var(--muted);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        z-index: 1;
+      }
+      thead th.rownum { z-index: 4; }
+      tbody tr:nth-child(even) td { background: rgba(148, 163, 184, 0.04); }
+      footer {
+        flex: 0 0 auto;
+        padding: 6px 16px;
+        border-top: 1px solid var(--border);
+        font-size: 11px;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+      }
+      button.reset {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        border-radius: 6px;
+        padding: 2px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      button.reset:hover { color: var(--text); border-color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="meta" id="file-meta"></span>
+    </header>
+
+    <section id="preferences">
+      <div class="pref-rows">
+        <div class="pref-row">
+          <span class="pref-label">Working hours</span>
+          <span class="pref-sentence">
+            <select class="pref-select" id="working-hours">
+              <option value="80">80</option>
+              <option value="72">72</option>
+              <option value="64">64</option>
+              <option value="56">56</option>
+              <option value="48">48</option>
+            </select>
+          </span>
+        </div>
+
+        <div class="pref-row">
+          <span class="pref-label">First preference</span>
+          <span class="pref-sentence">
+            Reduce
+            <select class="pref-select" id="pref1-reduce">
+              <option value="8">8</option>
+              <option value="16">16</option>
+              <option value="12">12</option>
+            </select>
+            to
+            <select class="pref-select" id="pref1-to">
+              <option value="8">8</option>
+              <option value="0" selected>0</option>
+            </select>.
+          </span>
+        </div>
+
+        <div class="pref-row" id="second-pref-row">
+          <span class="pref-label">Second preference</span>
+          <span class="pref-sentence">
+            Reduce
+            <select class="pref-select" id="pref2-reduce">
+              <option value="none" selected>none</option>
+              <option value="8">8</option>
+              <option value="16">16</option>
+              <option value="12">12</option>
+            </select>
+            to
+            <select class="pref-select" id="pref2-to">
+              <option value="none" selected>none</option>
+              <option value="8">8</option>
+              <option value="0">0</option>
+            </select>.
+          </span>
+        </div>
+
+        <div class="pref-row">
+          <span class="pref-label">Mon/Fri chance</span>
+          <span class="pref-sentence">
+            <select id="monfri-chance" class="pref-select">
+              <option value="0">0</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50" selected>50</option>
+              <option value="60">60</option>
+              <option value="70">70</option>
+              <option value="80">80</option>
+              <option value="90">90</option>
+              <option value="100">100</option>
+            </select>
+            <span class="pref-suffix">% (vs. other days)</span>
+          </span>
+        </div>
+
+        <div class="pref-row">
+          <span class="pref-label">Mid-cluster chance</span>
+          <span class="pref-sentence">
+            <select id="cluster-chance" class="pref-select">
+              <option value="0" selected>0</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+              <option value="60">60</option>
+              <option value="70">70</option>
+              <option value="80">80</option>
+              <option value="90">90</option>
+              <option value="100">100</option>
+            </select>
+            <span class="pref-suffix">% (vs. other days)</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="checkboxes">
+        <label class="pref-weekend">
+          <input type="checkbox" id="preserve-weekends" />
+          preserve weekends
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="reduce-btn" id="reduce-hours">reduce hours</button>
+        <button class="export-btn" id="export-xlsx">export to Excel</button>
+      </div>
+    </section>
+
+    <div id="error"></div>
+
+    <div id="dropzone">
+      <div class="big">Drop an Excel file here</div>
+      <div class="hint">.xlsx / .xls / .csv — or click to browse</div>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden />
+    </div>
+
+    <div id="table-wrap">
+      <table>
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <footer>
+      <span id="status">Ready</span>
+      <span>
+        <button class="reset" id="reset-btn" style="display: none">Open another</button>
+      </span>
+    </footer>
+
+    <div id="modal-backdrop" class="modal-backdrop" hidden>
+      <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-title" id="modal-title">Lower the working hours</div>
+        <div class="modal-body">
+          Working hours is set to 80 — that's the starting amount, so there's nothing to
+          reduce. Set it to a smaller value (72, 64, 56, or 48) and try again.
+        </div>
+        <div class="modal-actions">
+          <button class="modal-ok" id="modal-ok">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/xlsx.full.min.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>
