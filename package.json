@@ -29,7 +29,8 @@
       "target": "dmg",
       "icon": "assets/icon.icns",
       "category": "public.app-category.productivity",
-      "identity": null
+      "hardenedRuntime": true,
+      "notarize": true
     },
     "win": {
       "target": "nsis",

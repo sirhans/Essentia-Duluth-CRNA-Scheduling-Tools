@@ -4,3 +4,5 @@ dist-release/
 out/
 *.log
 .DS_Store
+*.p12
+*.p8
