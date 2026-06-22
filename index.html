@@ -227,21 +227,21 @@
       .modal-button {
         border: 1px solid var(--border);
         border-radius: 6px;
-        padding: 7px 18px;
+        padding: 7px 16px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
       }
       .modal-button.primary {
-        background: var(--accent);
+        background: hsl(198, 47%, 60%); /* matches the reduce-hours button */
         color: var(--header);
         border: none;
       }
+      .modal-button.primary:hover { filter: brightness(1.08); }
       .modal-button.secondary {
         background: transparent;
         color: var(--text);
       }
-      .modal-button:hover { filter: brightness(1.08); }
       .modal-button.secondary:hover { border-color: var(--accent); }
       .modal-button:disabled {
         opacity: 0.8;
