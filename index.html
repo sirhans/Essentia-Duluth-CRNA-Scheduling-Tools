@@ -243,6 +243,52 @@
       }
       .modal-button:hover { filter: brightness(1.08); }
       .modal-button.secondary:hover { border-color: var(--accent); }
+      .modal-button:disabled {
+        opacity: 0.8;
+        cursor: wait;
+        filter: none;
+      }
+      .modal-button-content {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(11, 18, 32, 0.35);
+        border-top-color: var(--header);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .modal-progress {
+        margin: -4px 0 16px;
+      }
+      .modal-progress[hidden] { display: none; }
+      .progress-track {
+        height: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--header);
+      }
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.15s ease;
+      }
+      .progress-label {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
       /* Rows that could not reach target after all allowed reductions. */
       tbody tr.short-row td,
       tbody tr.short-row td.rownum {
@@ -506,6 +552,12 @@
         <div class="modal-body">
           Working hours is set to 80 — that's the starting amount, so there's nothing to
           reduce. Set it to a smaller value (72, 64, 56, or 48) and try again.
+        </div>
+        <div class="modal-progress" id="modal-progress" hidden>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-label" id="progress-label">0%</div>
         </div>
         <div class="modal-actions">
           <button class="modal-button secondary" id="modal-cancel" hidden>Cancel</button>

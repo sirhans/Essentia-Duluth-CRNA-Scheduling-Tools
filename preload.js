@@ -14,5 +14,10 @@ contextBridge.exposeInMainWorld('app', {
   updates: {
     check: () => ipcRenderer.invoke('updates:check'),
     install: () => ipcRenderer.invoke('updates:install'),
+    onDownloadProgress: (callback) => {
+      const listener = (event, progress) => callback(progress);
+      ipcRenderer.on('updates:download-progress', listener);
+      return () => ipcRenderer.removeListener('updates:download-progress', listener);
+    },
   },
 });

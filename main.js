@@ -9,6 +9,16 @@ app.setName('Essentia Duluth CRNA Scheduling Tool');
 const UPDATE_REPO = 'sirhans/Essentia-Duluth-CRNA-Scheduling-Tools';
 autoUpdater.autoDownload = false;
 
+autoUpdater.on('download-progress', (progress) => {
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send('updates:download-progress', {
+      percent: Number.isFinite(progress.percent) ? progress.percent : 0,
+      transferred: progress.transferred,
+      total: progress.total,
+    });
+  });
+});
+
 function parseVersion(version) {
   return String(version)
     .replace(/^v/i, '')

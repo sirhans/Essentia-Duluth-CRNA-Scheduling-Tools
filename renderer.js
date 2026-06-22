@@ -532,12 +532,60 @@ const modalTitle = document.getElementById('modal-title');
 const modalBody = modalBackdrop.querySelector('.modal-body');
 const modalOkBtn = document.getElementById('modal-ok');
 const modalCancelBtn = document.getElementById('modal-cancel');
+const modalProgress = document.getElementById('modal-progress');
+const progressTrack = modalProgress.querySelector('.progress-track');
+const progressFill = document.getElementById('progress-fill');
+const progressLabel = document.getElementById('progress-label');
 let modalOkHandler = null;
+let removeUpdateProgressListener = null;
+
+function setModalButtonContent(button, text, { spinner = false } = {}) {
+  button.textContent = '';
+  const content = document.createElement('span');
+  content.className = 'modal-button-content';
+  if (spinner) {
+    const spinnerEl = document.createElement('span');
+    spinnerEl.className = 'spinner';
+    spinnerEl.setAttribute('aria-hidden', 'true');
+    content.appendChild(spinnerEl);
+  }
+  const label = document.createElement('span');
+  label.textContent = text;
+  content.appendChild(label);
+  button.appendChild(content);
+}
+
+function setProgress(percent) {
+  const normalized = Math.max(0, Math.min(100, Number(percent) || 0));
+  const rounded = Math.round(normalized);
+  progressFill.style.width = `${normalized}%`;
+  progressLabel.textContent = `${rounded}%`;
+  progressTrack.setAttribute('aria-valuenow', String(rounded));
+}
+
+function showProgressBar() {
+  setProgress(0);
+  modalProgress.hidden = false;
+}
+
+function hideProgressBar() {
+  modalProgress.hidden = true;
+  setProgress(0);
+}
+
+function stopListeningForUpdateProgress() {
+  if (removeUpdateProgressListener) {
+    removeUpdateProgressListener();
+    removeUpdateProgressListener = null;
+  }
+}
 
 function showModal({ title, body, okText = 'OK', cancelText = '', onOk = null }) {
+  stopListeningForUpdateProgress();
+  hideProgressBar();
   modalTitle.textContent = title;
   modalBody.textContent = body;
-  modalOkBtn.textContent = okText;
+  setModalButtonContent(modalOkBtn, okText);
   modalCancelBtn.textContent = cancelText;
   modalCancelBtn.hidden = !cancelText;
   modalOkBtn.disabled = false;
@@ -557,6 +605,9 @@ function showWorkingHoursModal() {
 }
 
 function hideModal() {
+  if (modalOkBtn.disabled) return;
+  stopListeningForUpdateProgress();
+  hideProgressBar();
   modalBackdrop.hidden = true;
   modalOkHandler = null;
 }
@@ -588,8 +639,15 @@ async function installUpdate(currentVersion, latestVersion) {
   }
   modalOkBtn.disabled = true;
   modalCancelBtn.disabled = true;
+  setModalButtonContent(modalOkBtn, 'Updating...', { spinner: true });
+  showProgressBar();
   modalBody.textContent = `Downloading version ${latestVersion}. The app will restart when the update is ready.`;
   statusEl.textContent = `Downloading update ${latestVersion}…`;
+  if (window.app.updates.onDownloadProgress) {
+    removeUpdateProgressListener = window.app.updates.onDownloadProgress((progress) => {
+      setProgress(progress && progress.percent);
+    });
+  }
   try {
     const result = await window.app.updates.install();
     if (result && result.started === false) {
