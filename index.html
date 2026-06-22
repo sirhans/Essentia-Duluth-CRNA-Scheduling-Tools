@@ -483,7 +483,7 @@
 
         <div
           class="pref-row has-tooltip"
-          data-tooltip="A mid-cluster day is a day where both tomorrow and yesterday are working days. Setting this to 0 means we never set mid-cluster days to 0 hours. This has no effect on reductions that don't go all the way to 0 hours. If in a given week we can not achieve the required reduction with this setting on, then we ignore this setting."
+          data-tooltip="This sets the chance of adding a day off in the middle of a cluster of work days. 0% means we never add a day off sandwiched between two work days unless there's no other way to reach the required number of hours. 100% means we can schedule a day off any day of the week without preference. All other choices are a compromise between those two options. This setting exists because strictly forcing the days off to be clustered could lead to too many people taking time off on the same day of the week. We recommend leaving this setting at 0 unless you are having trouble with off-days being unevenly distributed."
         >
           <span class="pref-label">Mid-cluster chance</span>
           <span class="pref-sentence">
