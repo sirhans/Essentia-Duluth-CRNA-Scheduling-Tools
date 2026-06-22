@@ -25,6 +25,7 @@ const START_HOURS = 80;
 // Fixed canonical layout: Mondays are columns B & J, Fridays are F & N.
 const MONDAY_COLS = [1, 9];
 const FRIDAY_COLS = [5, 13];
+const WEEKEND_COLS = [6, 7, 14, 15];
 // Expected day-of-week label (lowercased) for each day column, used to validate
 // that an imported file matches the canonical layout.
 const EXPECTED_DAYS = {
@@ -334,32 +335,43 @@ function monFriChance() {
 function midClusterChance() {
   return chanceFromDropdown('cluster-chance');
 }
+function preserveWeekends() {
+  return document.getElementById('preserve-weekends')?.checked === true;
+}
 
 function isMonOrFri(c) {
   return MONDAY_COLS.includes(c) || FRIDAY_COLS.includes(c);
 }
+function isWeekend(c) {
+  return WEEKEND_COLS.includes(c);
+}
 
 // Pick which matching cell to reduce, using per-cell selection weights.
 //
-// Each candidate starts at weight 1. Mondays/Fridays are multiplied by the
-// Mon/Fri chance; days sitting between two worked days ("mid-cluster") are
-// multiplied by the mid-cluster chance — but only when reducing to 0 (Y === 0),
-// since reducing to a non-zero value keeps the day worked and can't break a
-// cluster. A day that is both Mon/Fri AND mid-cluster gets both multipliers
-// (e.g. 0.5 × 0.5 = 0.25). Selection is a weighted roulette wheel.
+// Each candidate starts at weight 1. If "preserve weekends" is checked,
+// Saturdays/Sundays get weight 0 and cannot be picked. Mondays/Fridays are
+// multiplied by the Mon/Fri chance; days sitting between two worked days
+// ("mid-cluster") are multiplied by the mid-cluster chance — but only when
+// reducing to 0 (Y === 0), since reducing to a non-zero value keeps the day
+// worked and can't break a cluster. A day that is both Mon/Fri AND mid-cluster
+// gets both multipliers (e.g. 0.5 × 0.5 = 0.25). Selection is a weighted
+// roulette wheel.
 //
 // Fallback: if every candidate ends up at weight 0 (e.g. both chances are 0 and
 // every matching day is a Mon/Fri or mid-cluster), the mid-cluster factor is
 // dropped (treated as 100%) so the row can still be reduced. Mon/Fri exclusion
 // at 0% stays hard — if dropping the cluster factor still leaves everything at 0
-// (all matching days are Mon/Fri), the row is left short (return null).
+// (all matching days are Mon/Fri or protected weekends), the row is left short
+// (return null).
 function weightedPick(cols, rowIndex, Y) {
   const mf = monFriChance();
   const cl = midClusterChance();
   const clusterApplies = Y === 0;
+  const weekendsProtected = preserveWeekends();
 
   function roulette(useCluster) {
     const weights = cols.map((c) => {
+      if (weekendsProtected && isWeekend(c)) return 0;
       let w = 1;
       if (isMonOrFri(c)) w *= mf;
       if (useCluster && clusterApplies && isInCluster(rowIndex, c)) w *= cl;
